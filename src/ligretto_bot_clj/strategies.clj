@@ -3,7 +3,7 @@
             [ligretto-bot-clj.utils :as utils :refer [find-index find-first]]
             [clojure.core.async :as async :refer [<! go timeout]]))
 
-(def ^:const default-turn-timeout 1500)
+(def default-turn-timeout 1000)
 
 (defn put-card ([ctx from-index to-index]
                 (let [game-id (:room-id ctx)]
@@ -134,3 +134,43 @@
   (go
     (<! (turn-timeout ctx))
     (default-turn-action ctx)))
+
+(defn need-take-from-ligretto-deck?
+  "We need to take cards from ligretto deck if we have not enought cards in the ligretto row.
+  It sends null for empty card"
+  [ligretto]
+  (some nil? ligretto))
+
+(defn can-put-card-from-ligretto?
+  [ligretto playground]
+  (some #(can-put-card? % playground) ligretto))
+
+(defn put-card-from-liretto
+  [ctx]
+  (let [{:keys [ligretto playground]} (extract-decks ctx)
+        playable-cards-indexed (keep-indexed
+                                (fn [i card]
+                                  (when (can-put-card? card playground)
+                                    [card i]))
+                                ligretto)
+        ;; we want to put card with the highest value
+        [random-card random-card-index] (last (sort-by :value playable-cards-indexed))
+        ]
+    (when random-card
+      (let [index (find-place-to-put random-card playground)]
+        (put-card ctx random-card-index index)))))
+
+(defn easy-turn-action
+  [ctx]
+  (let [{:keys [stack playground ligretto]} (extract-decks ctx)]
+    (cond
+      (need-take-from-ligretto-deck? ligretto) (take-card-from-ligretto-deck ctx)
+      (can-put-card-from-ligretto? ligretto playground) (put-card-from-liretto ctx)
+      (can-put-card? (last stack) playground) (put-card-from-stack ctx)
+      :else (take-card-from-stack ctx))))
+
+(defmethod make-turn :easy
+  [ctx]
+  (go
+    (<! (turn-timeout ctx))
+    (easy-turn-action ctx)))

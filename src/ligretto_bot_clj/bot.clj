@@ -12,9 +12,9 @@
 
 (def socket-url "https://api.ligretto.app/")
 
-(def ^:const game-start-timeout 64000)
-(def ^:const connect-timeout 10000)
+(def ^:const start-game-timeout 64000)
 (def ^:const update-game-timeout 180000)
+(def ^:const connect-timeout 10000)
 
 (def event-types
   {:connect-to-room-success "@@rooms/SERVER/CONNECT_TO_ROOM_SUCCESS"
@@ -124,7 +124,7 @@
       (throw (ex-info "Game already started" {:room-id room-id :bot-id bot-id})))
 
     (go
-      (let [wait-start-timeout>    (timeout game-start-timeout)
+      (let [wait-start-timeout>    (timeout start-game-timeout)
             [stated-game-event ch] (alts! [(wait-for-start-game events>)
                                            wait-start-timeout>])]
         (when (= ch wait-start-timeout>)
