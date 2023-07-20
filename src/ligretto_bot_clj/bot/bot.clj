@@ -1,14 +1,14 @@
-(ns ligretto-bot-clj.bot
+(ns ligretto-bot-clj.bot.bot
   (:require
    [cheshire.core :as json]
    [taoensso.timbre :as log]
    [camel-snake-kebab.core :as csk]
    [clojure.core.async :as async :refer [<! >! go go-loop chan close! alts! timeout]]
    [ligretto-bot-clj.utils :as utils]
-   [ligretto-bot-clj.socket-io-client :as sic]
-   [ligretto-bot-clj.api :as api]
-   [ligretto-bot-clj.strategies :as strat]
-   [ligretto-bot-clj.actions :as actions :refer [emit-action! ->action]]))
+   [ligretto-bot-clj.bot.socket-io-client :as sic]
+   [ligretto-bot-clj.bot.api :as api]
+   [ligretto-bot-clj.bot.strategies :as strat]
+   [ligretto-bot-clj.bot.actions :as actions :refer [emit-action! ->action]]))
 
 (def socket-url "https://api.ligretto.app/")
 
@@ -91,7 +91,7 @@
         (condp = (:type event)
           (event-types :update-game)
           (do
-            (swap! (:game-state ctx) merge (:payload event))
+            (reset! (:game-state ctx) (:payload event))
             (log/debug (format "[%s] Game updated" (:bot-id ctx)))
             (recur))
           (event-types :end-round)
@@ -133,7 +133,7 @@
           (throw (ex-info "Game start timeout" {:room-id room-id :bot-id bot-id})))
 
         (log/info (format "[%s] Game started: %s" bot-id room-id))
-        (swap! game-state merge (:payloed stated-game-event))
+        (reset! game-state (:payloed stated-game-event))
 
         (handle-updates ctx)
         (game-loop ctx)))))
@@ -168,10 +168,10 @@
            (condp = ch
              sucess>  (do
                         (log/info (format "[%s] Connected to room %s" bot-id room-id))
-                        (swap! (:game-state ctx) merge (extract-game connected-data))
+                        (reset! (:game-state ctx) (extract-game connected-data))
                         (process-game ctx))
              timeout> (do
-                        (log/error (format  "[%s] Failed to connect to room %s" bot-id room-id))
+                        (log/error (format "[%s] Failed to connect to room %s" bot-id room-id))
                         (stop-bot ctx)))))
        ctx)))
   ([room-id]

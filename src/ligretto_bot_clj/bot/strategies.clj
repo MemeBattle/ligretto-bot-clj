@@ -1,5 +1,5 @@
-(ns ligretto-bot-clj.strategies
-  (:require [ligretto-bot-clj.actions :as actions :refer [->action]]
+(ns ligretto-bot-clj.bot.strategies
+  (:require [ligretto-bot-clj.bot.actions :as actions :refer [->action]]
             [ligretto-bot-clj.utils :as utils :refer [find-index find-first]]
             [clojure.core.async :as async :refer [<! go timeout]]))
 

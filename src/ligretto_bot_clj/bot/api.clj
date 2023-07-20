@@ -1,4 +1,4 @@
-(ns ligretto-bot-clj.api
+(ns ligretto-bot-clj.bot.api
   (:require [clj-http.client :as http]
             [taoensso.timbre :as log]
             [cheshire.core :as json]

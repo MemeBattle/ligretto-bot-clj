@@ -1,5 +1,5 @@
-(ns ligretto-bot-clj.actions
-  (:require    [ligretto-bot-clj.socket-io-client :as sic]))
+(ns ligretto-bot-clj.bot.actions
+  (:require    [ligretto-bot-clj.bot.socket-io-client :as sic]))
 
 (def action-types
   {:connect-to-room "@@rooms/WEBSOCKET/CONNECT_TO_ROOM"

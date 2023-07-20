@@ -1,4 +1,4 @@
-(ns ligretto-bot-clj.socket-io-client
+(ns ligretto-bot-clj.bot.socket-io-client
   (:require [clojure.pprint :as pprint]
             [taoensso.timbre :as log]
             [camel-snake-kebab.core :as csk]

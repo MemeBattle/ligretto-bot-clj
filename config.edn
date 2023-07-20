@@ -1,0 +1,14 @@
+{:web/db
+ {:init-value {}}
+
+ :web/app
+ {:db #ig/ref :web/db}
+
+ :web/server
+ {:app #ig/ref :web/app
+  :config #profile {:dev {:host "127.0.0.1"
+                          :port 4201
+                          :join? false}
+                    :prod {:host #env SERVER_HOST
+                           :port #env SERVER_PORT
+                           :join? true}}}}
