@@ -26,7 +26,6 @@
                          (when hash (.put json "hash" hash))
                          (doseq [[k v] message*]
                            (.put json (name k) v))
-                         (log/debug (format "json msg: %s" json))
                          [json])
         :else [message]))
 
@@ -72,15 +71,13 @@
          socket      (IO/socket url io-options)
          event-map*  (merge event-map {Socket/EVENT_CONNECT (fn [& args]
                                                               (go
-                                                                (log/debug (format "connected args %s" (apply str args)))
-                                                                (log/info (format "connected to %s" url))
+                                                                (log/debugf "connected to: %s args %s" url (apply str args))
                                                                 (>! socket> socket)))
                                        Socket/EVENT_CONNECT_ERROR (fn [error]
                                                                     (pprint/pprint error)
-                                                                    (go
-                                                                      (log/error (format "failed to connect to %s" url)
-                                                                                 (log/debug (format "%s" (.getMessage error)) options)
-                                                                                 (close! socket>))))})]
+                                                                    (log/errorf "failed to connect to %s" url
+                                                                                (log/debug (.getMessage error) options)
+                                                                               (close! socket>)))})]
      (.open socket)
 
      (doseq [[event handler] event-map*]

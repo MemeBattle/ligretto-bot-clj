@@ -154,8 +154,7 @@
                                     [card i]))
                                 ligretto)
         ;; we want to put card with the highest value
-        [random-card random-card-index] (last (sort-by :value playable-cards-indexed))
-        ]
+        [random-card random-card-index] (last (sort-by :value playable-cards-indexed))]
     (when random-card
       (let [index (find-place-to-put random-card playground)]
         (put-card ctx random-card-index index)))))

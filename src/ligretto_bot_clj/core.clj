@@ -19,8 +19,8 @@
 
 (defn stop-app []
   (some->
-    (deref system)
-    (ig/halt!)))
+   (deref system)
+   (ig/halt!)))
 
 (defn start-app
   [& {:keys [config] :or {config {:profile :prod}}}]
@@ -32,9 +32,14 @@
        (reset! system)))
 
 (comment
-  (start-app :config {:profile :dev}))
+  (log/set-min-level! :error)
+  (log/with-min-level :error
+    (start-app :config {:profile :dev}))
+
+  @system)
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& _]
+  (log/set-min-level! :error)
   (start-app))

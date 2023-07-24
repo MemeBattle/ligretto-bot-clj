@@ -1,11 +1,6 @@
 (ns ligretto-bot-clj.web.services.bot
-  (:require
-            [clojure.core.async :as async]
-
-            [ligretto-bot-clj.bot.bot :refer [create-bot]]))
-
-
-;;
+  (:require [clojure.core.async :as async]
+            [ligretto-bot-clj.bot.bot :refer [create-bot stop-bot]]))
 
 (defn ->bot
   [bot]
@@ -46,9 +41,24 @@
     (when (nil? game)
       (swap! db assoc (keyword game-id) {}))
     (let [bot
-          (async/<!! (create-bot game-id {:strategy strategy :turn-timeout turn-timeout}))]
+          (async/<!! (create-bot game-id {:strategy (keyword strategy) :turn-timeout turn-timeout}))]
       (swap! db assoc-in [game-id (:bot-id bot)] bot)
       (->bot bot))))
+
+(defn remove-bot
+  [game-id bot-id {:keys [db]}]
+  (let [bot (get @db [game-id bot-id])]
+    (stop-bot bot)
+    (swap! db update-in [game-id] dissoc bot-id)
+    (->bot bot)))
+
+(defn remove-game
+  [game-id {:keys [db]}]
+  (let [bots (get @db game-id)]
+    (doseq [[_ bot] bots]
+      (stop-bot bot))
+    (swap! db dissoc game-id)
+    (map ->bot bots)))
 
 (defn get-by-game-id
   [game-id {:keys [db]}]

@@ -31,7 +31,7 @@
                                        (.toString)
                                        (json/parse-string csk/->kebab-case-keyword))]
                         (go
-                          (log/debug (format "event: %s" event*))
+                          (log/debug"event: %s" event*)
                           (>! port event*))))))
 
 (defn extract-game
@@ -76,7 +76,7 @@
     (sic/disconnect! socket)
     (deliver stoped? true)
     (close! events>)
-    (log/info (format "[%s] Bot stopped" (:bot-id ctx)))))
+    (log/infof "[%s] Bot stopped" (:bot-id ctx))))
 
 (defn handle-updates
   [ctx]
@@ -86,21 +86,21 @@
                              update-timeout>])]
       (if (= ch update-timeout>)
         (do
-          (log/error (format "[%s] Update game timeout" (:bot-id ctx)))
+          (log/errorf "[%s] Update game timeout" (:bot-id ctx))
           (stop-bot ctx))
         (condp = (:type event)
           (event-types :update-game)
           (do
             (reset! (:game-state ctx) (:payload event))
-            (log/debug (format "[%s] Game updated" (:bot-id ctx)))
+            (log/debugf "[%s] Game updated" (:bot-id ctx))
             (recur))
+
           (event-types :end-round)
           (do
-            (log/debug (format "[%s] Round finished" (:bot-id ctx)))
+            (log/debugf "[%s] Round finished" (:bot-id ctx))
             (recur))
-          (do
-            (log/error (format "[%s] Unknown event: %s" (:bot-id ctx) event))
-            (recur)))))))
+
+          (log/errorf "[%s] Unknown event: %s" (:bot-id ctx) event))))))
 
 (defn game-loop
   [ctx]
@@ -119,7 +119,7 @@
   (let [{:keys [bot-id room-id game-state events>]} ctx]
     ;; TODO: support wait for game end as a spectrator
     (when (not (game-status= :new ctx))
-      (log/error (format "[%s] Game already started" bot-id))
+      (log/errorf "[%s] Game already started" bot-id)
       (stop-bot ctx)
       (throw (ex-info "Game already started" {:room-id room-id :bot-id bot-id})))
 
@@ -128,11 +128,11 @@
             [stated-game-event ch] (alts! [(wait-for-start-game events>)
                                            wait-start-timeout>])]
         (when (= ch wait-start-timeout>)
-          (log/error (format "[%s] Game start timeout" bot-id))
+          (log/errorf "[%s] Game start timeout" bot-id)
           (stop-bot ctx)
           (throw (ex-info "Game start timeout" {:room-id room-id :bot-id bot-id})))
 
-        (log/info (format "[%s] Game started: %s" bot-id room-id))
+        (log/infof "[%s] Game started: %s" bot-id room-id)
         (reset! game-state (:payloed stated-game-event))
 
         (handle-updates ctx)
@@ -167,11 +167,11 @@
          (let [[connected-data ch] (alts! [sucess> timeout>])]
            (condp = ch
              sucess>  (do
-                        (log/info (format "[%s] Connected to room %s" bot-id room-id))
+                        (log/infof "[%s] Connected to room %s" bot-id room-id)
                         (reset! (:game-state ctx) (extract-game connected-data))
                         (process-game ctx))
              timeout> (do
-                        (log/error (format "[%s] Failed to connect to room %s" bot-id room-id))
+                        (log/errorf "[%s] Failed to connect to room %s" bot-id room-id)
                         (stop-bot ctx)))))
        ctx)))
   ([room-id]
