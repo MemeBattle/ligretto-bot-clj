@@ -16,7 +16,10 @@
   [_ db]
   (doseq [game (vals @db)]
     (doseq [bot (vals game)]
-      (stop-bot bot)))
+      (try
+        (stop-bot bot)
+        (catch Exception e
+          (log/error (ex-message e))))))
   (reset! db {}))
 
 (def ^:dynamic *ctx* nil)

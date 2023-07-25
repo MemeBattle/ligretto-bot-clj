@@ -31,7 +31,7 @@
                                        (.toString)
                                        (json/parse-string csk/->kebab-case-keyword))]
                         (go
-                          (log/debug"event: %s" event*)
+                          (log/debugf "event: %s" event*)
                           (>! port event*))))))
 
 (defn extract-game
