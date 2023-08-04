@@ -1,6 +1,7 @@
 (ns ligretto-bot-clj.web.app
   (:require [integrant.core :as ig]
             [ring.logger :refer [wrap-with-logger]]
+            [ring.middleware.resource :refer [wrap-resource]]
             [taoensso.timbre :as log]
             [ligretto-bot-clj.web.router :refer [router]]
             [ligretto-bot-clj.web.middleware :refer [wrap-request-ctx wrap-ignore-trailing-slash]]
@@ -31,4 +32,5 @@
         (wrap-with-logger {:log-fn (fn [{:keys [level throwable message]}]
                                              (log/log level throwable message))})
         (wrap-ignore-trailing-slash)
+        (wrap-resource "public")
         (wrap-request-ctx *ctx*))))

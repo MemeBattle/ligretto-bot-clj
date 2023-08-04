@@ -4,10 +4,12 @@
             [ring.util.response :refer [response]]
 
             [ligretto-bot-clj.web.services.bot :as bot-service]
-            [ligretto-bot-clj.web.middleware :refer [wrap-api]]))
+
+            [ligretto-bot-clj.web.views.home :refer [home-page]]
+            [ligretto-bot-clj.web.middleware :refer [wrap-api wrap-page]]))
 
 (defroutes router
-  (GET "/" [] "Hello, World!")
+  (wrap-page (GET "/" {:keys [ctx]} (home-page ctx)))
 
   (wrap-api
    (context "/api" {:keys [ctx]}

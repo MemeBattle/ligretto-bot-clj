@@ -48,7 +48,7 @@
                                      (subs uri 0 (dec (count uri)))
                                      uri))))))
 
-(defn wrap-pages
+(defn wrap-page
   [handler]
   (-> handler
       (wrap-defaults site-defaults)))
