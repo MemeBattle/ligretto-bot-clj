@@ -39,7 +39,6 @@
   @system)
 
 (defn -main
-  "I don't do a whole lot ... yet."
   [& _]
-  (log/set-min-level! :error)
-  (start-app))
+  (log/with-min-level :error
+    (start-app)))

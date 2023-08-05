@@ -51,4 +51,4 @@
 (defn wrap-page
   [handler]
   (-> handler
-      (wrap-defaults site-defaults)))
+      (wrap-defaults (merge site-defaults {:security {:anti-forgery false}}))))
