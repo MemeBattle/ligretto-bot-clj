@@ -1,12 +1,10 @@
 (ns ligretto-bot-clj.web.app
   (:require [integrant.core :as ig]
-            [ring.logger :refer [wrap-with-logger]]
-            [ring.middleware.resource :refer [wrap-resource]]
             [taoensso.timbre :as log]
             [clojure.core.async :as async]
 
             [ligretto-bot-clj.web.router :refer [router]]
-            [ligretto-bot-clj.web.middleware :refer [wrap-request-ctx wrap-ignore-trailing-slash]]
+            [ligretto-bot-clj.web.middleware :refer [wrap-base]]
             [ligretto-bot-clj.bot.bot :refer [stop-bot]]))
 
 (defn clear-db-worker
@@ -16,8 +14,9 @@
     (if (empty? game)
       (swap! db dissoc game-id)
       (doseq [bot (vals game)]
-        (when (realized? (:stopped? bot))
-          (swap! db dissoc (keyword (:bot-id bot))))))))
+        (when (realized? (:stoped? bot))
+          (log/info "Removing bot" (:bot-id bot) "from game" game-id)
+          (swap! db dissoc game-id (keyword (:bot-id bot))))))))
 
 (defn run-clear-db-worker
   "Runs worker to clear stopped bots from DB
@@ -51,9 +50,4 @@
 (defmethod ig/init-key :web/app
   [_ {:keys [db]}]
   (binding [*ctx* {:db db}]
-    (-> router
-        (wrap-with-logger {:log-fn (fn [{:keys [level throwable message]}]
-                                     (log/log level throwable message))})
-        (wrap-ignore-trailing-slash)
-        (wrap-resource "public")
-        (wrap-request-ctx *ctx*))))
+    (wrap-base router *ctx*)))

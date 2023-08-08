@@ -33,9 +33,15 @@
 
 (comment
   (log/set-min-level! :error)
-  (log/with-min-level :error
+  (log/with-min-level :info
     (start-app :config {:profile :dev}))
 
+  (require '[portal.api :as p])
+  (add-tap #'p/submit)
+  (p/start {})
+  (tap> "test")
+
+  (tap> @system)
   @system)
 
 (defn -main

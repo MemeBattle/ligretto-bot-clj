@@ -2,14 +2,20 @@
   (:require [compojure.core :refer [defroutes context GET POST DELETE]]
             [compojure.route :as route]
             [ring.util.response :refer [response]]
+            [hiccup.page :refer [html5]]
 
             [ligretto-bot-clj.web.services.bot :as bot-service]
+            [ligretto-bot-clj.web.controllers.health :refer [healthcheck!]]
+            [ligretto-bot-clj.web.controllers.bot :refer [create]]
 
             [ligretto-bot-clj.web.views.home :refer [home-page]]
             [ligretto-bot-clj.web.middleware :refer [wrap-api wrap-page]]))
 
 (defroutes router
-  (wrap-page (GET "/" {:keys [ctx]} (home-page ctx)))
+  (wrap-page (GET "/" {:keys [ctx]} (html5 (home-page ctx))))
+  (POST "/create" req (create req))
+
+  (wrap-api (GET "/health" [] healthcheck!))
 
   (wrap-api
    (context "/api" {:keys [ctx]}

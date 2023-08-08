@@ -1,6 +1,15 @@
 (ns ligretto-bot-clj.web.services.bot
   (:require [clojure.core.async :as async]
+            [clojure.string :as str]
             [ligretto-bot-clj.bot.bot :refer [create-bot stop-bot]]))
+
+(defn extract-game-id
+  [url]
+  (when [str/starts-with? url "https://ligretto.app/game"]
+    (let [room-id (str/replace url #"https://ligretto.app/game/" "")]
+      (if (str/blank? room-id)
+        nil
+        room-id))))
 
 (defn ->bot
   [bot]
@@ -38,7 +47,9 @@
 (defn create
   [{:keys [game-id strategy turn-timeout]} {:keys [db]}]
   (let [game-id* (keyword game-id)
-        game (get @db game-id*)]
+        game (get @db game-id*)
+        turn-timeout (if (nil? turn-timeout) 1000 turn-timeout)
+        strategy (if (nil? strategy) :easy strategy)]
     (when (nil? game)
       (swap! db assoc game-id* {}))
     (let [bot (async/<!! (create-bot game-id {:strategy (keyword strategy) :turn-timeout turn-timeout}))]

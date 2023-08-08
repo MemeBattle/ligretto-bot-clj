@@ -1,6 +1,8 @@
 (ns ligretto-bot-clj.web.middleware
   (:require [taoensso.timbre :as log]
+            [ring.logger :refer [wrap-with-logger]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
+            [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.defaults :refer [site-defaults api-defaults wrap-defaults]]
             [camel-snake-kebab.core :as csk]))
 
@@ -52,3 +54,12 @@
   [handler]
   (-> handler
       (wrap-defaults (merge site-defaults {:security {:anti-forgery false}}))))
+
+(defn wrap-base
+  [handler ctx]
+  (-> handler
+      (wrap-with-logger {:log-fn (fn [{:keys [level throwable message]}]
+                                   (log/log level throwable message))})
+      (wrap-ignore-trailing-slash)
+      (wrap-request-ctx ctx)
+      (wrap-params)))
