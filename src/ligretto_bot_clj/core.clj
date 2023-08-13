@@ -38,7 +38,7 @@
 
   (require '[portal.api :as p])
   (add-tap #'p/submit)
-  (p/start {})
+  (p/open {:launcher :vs-code})
   (tap> "test")
 
   (tap> @system)

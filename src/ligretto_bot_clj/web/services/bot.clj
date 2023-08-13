@@ -5,11 +5,12 @@
 
 (defn extract-game-id
   [url]
-  (when [str/starts-with? url "https://ligretto.app/game"]
-    (let [room-id (str/replace url #"https://ligretto.app/game/" "")]
-      (if (str/blank? room-id)
-        nil
-        room-id))))
+  (if (str/starts-with? url "https://ligretto.app/game")
+   (let [room-id (str/replace url #"https://ligretto.app/game/" "")]
+     (if (str/blank? room-id)
+       (throw (ex-info "Invalid room url" {:url url}))
+       room-id))
+    (throw (ex-info "Invalid room url" {:url url}))))
 
 (defn ->bot
   [bot]
@@ -23,9 +24,9 @@
   [db]
   (let [entries (seq db)]
     (map (fn [[game-id bots]]
-           (let [[_ bot] (first bots)
-                 game-state @(:game-state bot)]
-             {:game-id game-id :game-state game-state})) entries)))
+           (let [[_ bot] (first bots)]
+             (when-let [game-state (:game-state bot)]
+               {:game-id game-id :game-state @game-state}))) entries)))
 
 (defn ->bots
   [db]
@@ -48,14 +49,13 @@
   [{:keys [game-id strategy turn-timeout]} {:keys [db]}]
   (let [game-id* (keyword game-id)
         game (get @db game-id*)
-        turn-timeout (if (nil? turn-timeout) 1000 turn-timeout)
-        strategy (if (nil? strategy) :easy strategy)]
+        turn-timeout (or turn-timeout 1000)
+        strategy (or strategy :easy)]
     (when (nil? game)
       (swap! db assoc game-id* {}))
     (let [bot (async/<!! (create-bot game-id {:strategy (keyword strategy) :turn-timeout turn-timeout}))]
       (when (nil? bot)
         (throw (ex-info "Failed to create bot" {:game-id game-id :strategy strategy :turn-timeout turn-timeout})))
-
       (swap! db assoc-in [game-id* (keyword (:bot-id bot))] bot)
       (->bot bot))))
 
