@@ -1,0 +1,29 @@
+name: Build And Test
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Prepare java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '8'
+    - name: Install clojure tools
+      uses: DeLaGuardo/setup-clojure@12.1
+      with:
+        cli: 1.10.1.693
+        lein: 2.9.1
+    - name: Install dependencies
+      run: lein deps
+    - name: Run tests
+      run: lein test
+    - name: Build
+      run: lein uberjar

@@ -1,12 +1,11 @@
 (ns ligretto-bot-clj.core
+  (:gen-class)
   (:require [taoensso.timbre :as log]
             [integrant.core :as ig]
 
             [ligretto-bot-clj.config :as config]
-
             [ligretto-bot-clj.web.app]
-            [ligretto-bot-clj.web.server])
-  (:gen-class))
+            [ligretto-bot-clj.web.server]))
 
 (Thread/setDefaultUncaughtExceptionHandler
  (reify Thread$UncaughtExceptionHandler
@@ -44,7 +43,16 @@
   (tap> @system)
   @system)
 
+(defn shutdown-hook []
+  (.addShutdownHook (Runtime/getRuntime)
+                    (Thread. ^Runnable
+                     (fn []
+                       (println "Shutting Down!")
+                       (stop-app)
+                       (shutdown-agents)))))
+
 (defn -main
   [& _]
+  (shutdown-hook)
   (log/with-min-level :error
-    (start-app)))
+    (start-app :config {:profile :prod})))

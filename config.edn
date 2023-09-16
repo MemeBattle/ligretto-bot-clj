@@ -9,6 +9,6 @@
   :config #profile {:dev {:host "127.0.0.1"
                           :port 4201
                           :join? false}
-                    :prod {:host #env SERVER_HOST
-                           :port #env SERVER_PORT
+                    :prod {:host #or [#env APP_HOST "0.0.0.0"]
+                           :port #long #or [#env APP_PORT 4201]
                            :join? true}}}}

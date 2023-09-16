@@ -1,44 +1,28 @@
 # ligretto-bot-clj
 
-FIXME: description
+![logo](./resources/public/logo.png)
 
-## Installation
+This project is a bot for the card game [Ligretto](https://ligretto.app/). It is written in Clojure.
 
-Download from http://example.com/FIXME.
+## Local Development
 
-## Usage
+### Prerequisites
 
-FIXME: explanation
+- lein
 
-    $ java -jar ligretto-bot-clj-0.1.0-standalone.jar [args]
+### Running
 
-## Options
+```bash
+lein run
+```
 
-FIXME: listing of options this app accepts.
+### REPL
 
-## Examples
+```bash
+lein repl
+```
 
-...
+## Environment Variables
 
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2023 FIXME
-
-This program and the accompanying materials are made available under the
-terms of the Eclipse Public License 2.0 which is available at
-http://www.eclipse.org/legal/epl-2.0.
-
-This Source Code may also be made available under the following Secondary
-Licenses when the conditions for such availability set forth in the Eclipse
-Public License, v. 2.0 are satisfied: GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or (at your
-option) any later version, with the GNU Classpath Exception which is available
-at https://www.gnu.org/software/classpath/license.html.
+- `SERVER_PORT`: The port the server will listen on. Defaults to `4201`
+- `SERVER_HOST`: The host the server will listen on. Defaults to `127.0.0.1`

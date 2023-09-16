@@ -20,6 +20,10 @@
                  [com.taoensso/timbre "6.2.1"]
                  [io.socket/socket.io-client "2.1.0"]]
   :main ^:skip-aot ligretto-bot-clj.core
-  :target-path "target/%s"
+  :repl-options {:init-ns ligretto-bot-clj.core}
+
+  :uberjar-name "app.jar"
+  :resourses-path "resources"
+
   :profiles {:uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
