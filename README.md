@@ -4,6 +4,8 @@
 
 This project is a bot for the card game [Ligretto](https://ligretto.app/). It is written in Clojure.
 
+You can check out the bot in action [here](https://bots.ligretto.app/).
+
 ## Local Development
 
 ### Prerequisites
@@ -20,6 +22,13 @@ lein run
 
 ```bash
 lein repl
+```
+
+
+### Test
+
+```bash
+lein test
 ```
 
 ## Environment Variables
