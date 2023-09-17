@@ -1,11 +1,11 @@
 (ns ligretto-bot-clj.core
-  (:gen-class)
   (:require [taoensso.timbre :as log]
             [integrant.core :as ig]
 
             [ligretto-bot-clj.config :as config]
             [ligretto-bot-clj.web.app]
-            [ligretto-bot-clj.web.server]))
+            [ligretto-bot-clj.web.server])
+  (:gen-class))
 
 (Thread/setDefaultUncaughtExceptionHandler
  (reify Thread$UncaughtExceptionHandler

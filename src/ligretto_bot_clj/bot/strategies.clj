@@ -3,8 +3,6 @@
             [ligretto-bot-clj.utils :as utils :refer [find-index find-first]]
             [clojure.core.async :as async :refer [<! go timeout]]))
 
-(def default-turn-timeout 1000)
-
 (defn put-card ([ctx from-index to-index]
                 (let [game-id (:room-id ctx)]
                   (->action :put-card {:game-id               game-id
@@ -65,7 +63,7 @@
 
 (defn turn-timeout
   [ctx]
-  (timeout (or (:turn-timeout ctx) default-turn-timeout)))
+  (timeout (:turn-timeout ctx)))
 
 (defmulti make-turn
   :strategy)

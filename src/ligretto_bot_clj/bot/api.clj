@@ -2,9 +2,8 @@
   (:require [clj-http.client :as http]
             [taoensso.timbre :as log]
             [cheshire.core :as json]
-            [clojure.core.async :as async :refer [thread]]))
-
-(def api-url "https://core.ligretto.app/api")
+            [clojure.core.async :as async :refer [thread]]
+            [ligretto-bot-clj.constants :refer [api-url]]))
 
 (defn async-request
   [opts]

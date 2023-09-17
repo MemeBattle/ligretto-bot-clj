@@ -21,8 +21,6 @@
 
 (defn BotCard
   [{:keys [id strategy turn-timeout]}]
-  (let [strategy (if (nil? strategy) :easy strategy)
-        turn-timeout (if (nil? turn-timeout) 1000 turn-timeout)]
     [:div.flex.flex-col.bg-base-200.rounded-lg.shadow-lg.p-4
      [:p [:b "ID: "] id]
      [:p [:b "Strategy: "] (name strategy)]
@@ -31,7 +29,7 @@
       {:hx-delete (str "/bots/" id)
        :hx-indicator "#indicator"
        :hx-confirm "Are you sure you want to delete this bot?"}
-      "Delete"]]))
+      "Delete"]])
 
 (defn BotList
   [ctx]
@@ -42,11 +40,11 @@
        (let [bots (get bots (:game-id game))
              game-id (some-> game :game-id name)]
          (when (not (nil? game-id))
-          [:div.flex.flex-col
-           [:h3.text-xl.font-bold.mb-4 (str "Game " game-id)]
-           [:div.grid.grid-cols-3.gap-4
-            (for [bot bots]
-              (BotCard bot))]])))]))
+           [:div.flex.flex-col
+            [:h3.text-xl.font-bold.mb-4 (str "Game " game-id)]
+            [:div.grid.grid-cols-3.gap-4
+             (for [bot bots]
+               (BotCard bot))]])))]))
 
 (def Header
   [:header.navbar.bg-base-200
@@ -64,35 +62,38 @@
 (defn home-page
   [ctx]
   (Layout
-          "Ligretto Bot"
-          Header
-          [:div.min-h-full.py-8
-           [:div.container.mx-auto
-            [:h2.text-3xl.font-bold.mb-4 "Add bot to your room"]
-            [:form.flex.flex-col.mb-6.w-96
-             {:hx-post "/create"
-              :hx-target "#bots-list"
-              :hx-indicator "#indicator"}
-             [:input {:class       "input input-bordered input-bordered mb-3"
-                      :name        "room-url"
-                      :placeholder "Enter room URL"}]
-             [:div.join
-              [:input {:class       "input input-bordered input-bordered mb-3 join-item"
-                       :name        "turn-timeout"
-                       :placeholder "Turn timeout"}]
-              [:select.select.select-bordered.w-full.join-item
-               {:name "strategy"}
-               [:option {:value "easy"} "Easy"]
-               [:option {:value "random"} "Random"]
-               [:option {:value "default"} "Default"]]]
-             [:button.btn.btn-primary {:type "submit"} "Add Bot"]]
-            [:div.flex.flex-row.mb-4
-             [:h2.text-3xl.font-bold.mr-2 "Active bots"]
-             [:button.btn.btn-secondary.btn-sm
-              {:hx-get "/list"
-               :hx-target "#bots-list"
-               :hx-indicator "#indicator"}
-              "Refresh"]
-             [:span.loading.loading-infinity.loading-lg.mr-2.text-secondary.htmx-indicator {:id "indicator"}]]
-            (BotList ctx)]]
-          Footer))
+   "Ligretto Bot"
+   Header
+   [:div.min-h-full.py-8
+    [:div.container.mx-auto
+     [:h2.text-3xl.font-bold.mb-4 "Add bot to your room"]
+     [:form.flex.flex-col.mb-6.w-96
+      {:hx-post "/create"
+       :hx-target "#bots-list"
+       :hx-indicator "#indicator"}
+      [:input {:class       "input input-bordered input-bordered mb-3"
+               :name        "room-url"
+               :placeholder "Enter room URL"}]
+      [:div.join
+       [:input {:class       "input input-bordered input-bordered mb-3 join-item"
+                :name        "turn-timeout"
+                :placeholder "Turn timeout"
+                :type        "number"
+                :value       "1000"}]
+       [:select.select.select-bordered.w-full.join-item
+        {:name "strategy"
+         :value "easy"}
+        [:option {:value "easy"} "Easy"]
+        [:option {:value "random"} "Random"]
+        [:option {:value "default"} "Default"]]]
+      [:button.btn.btn-primary {:type "submit"} "Add Bot"]]
+     [:div.flex.flex-row.mb-4
+      [:h2.text-3xl.font-bold.mr-2 "Active bots"]
+      [:button.btn.btn-secondary.btn-sm
+       {:hx-get "/list"
+        :hx-target "#bots-list"
+        :hx-indicator "#indicator"}
+       "Refresh"]
+      [:span.loading.loading-infinity.loading-lg.mr-2.text-secondary.htmx-indicator {:id "indicator"}]]
+     (BotList ctx)]]
+   Footer))

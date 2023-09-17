@@ -1,12 +1,13 @@
 (ns ligretto-bot-clj.web.services.bot
   (:require [clojure.core.async :as async]
             [clojure.string :as str]
-            [ligretto-bot-clj.bot.bot :refer [create-bot stop-bot]]))
+            [ligretto-bot-clj.bot.bot :refer [create-bot stop-bot]]
+            [ligretto-bot-clj.constants :refer [game-url]]))
 
 (defn extract-game-id
   [url]
-  (if (str/starts-with? url "https://ligretto.app/game")
-   (let [room-id (str/replace url #"https://ligretto.app/game/" "")]
+  (if (str/starts-with? url game-url)
+   (let [room-id (str/replace url (str game-url "/") "")]
      (if (str/blank? room-id)
        (throw (ex-info "Invalid room url" {:url url}))
        room-id))

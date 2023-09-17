@@ -21,12 +21,13 @@
 (defn- make-args
   [message hash]
   (cond (or (list? message) (vector? message) (seq? message)) message
-        (map? message) (let [json (JSONObject.)
-                             message* (cske/transform-keys memoized->camelCaseString message)]
-                         (when hash (.put json "hash" hash))
-                         (doseq [[k v] message*]
-                           (.put json (name k) v))
-                         [json])
+        (map? message)
+        (let [json (JSONObject.)
+              message* (cske/transform-keys memoized->camelCaseString message)]
+          (when hash (.put json "hash" hash))
+          (doseq [[k v] message*]
+            (.put json (name k) v))
+          [json])
         :else [message]))
 
 (defn emit!
@@ -63,21 +64,26 @@
     (.build io-options)))
 
 (defn make-socket
+  ([url] (make-socket url {} {}))
+  ([url event-map] (make-socket url event-map {}))
   ([url event-map options]
    {:pre [(string? url)]}
    (let [socket> (chan)
          event-map (walk/stringify-keys event-map)
          io-options  (make-io-options options)
          socket      (IO/socket url io-options)
-         event-map*  (merge event-map {Socket/EVENT_CONNECT (fn [& args]
-                                                              (go
-                                                                (log/debugf "connected to: %s args %s" url (apply str args))
-                                                                (>! socket> socket)))
-                                       Socket/EVENT_CONNECT_ERROR (fn [error]
-                                                                    (pprint/pprint error)
-                                                                    (log/errorf "failed to connect to %s" url
-                                                                                (log/debug (.getMessage error) options)
-                                                                               (close! socket>)))})]
+         event-map*  (merge event-map
+                            {Socket/EVENT_CONNECT
+                             (fn [& args]
+                               (go
+                                 (log/debugf "connected to: %s args %s" url (apply str args))
+                                 (>! socket> socket)))
+                             Socket/EVENT_CONNECT_ERROR
+                             (fn [error]
+                               (pprint/pprint error)
+                               (log/errorf "failed to connect to %s" url
+                                           (log/debug (.getMessage error) options)
+                                           (close! socket>)))})]
      (.open socket)
 
      (doseq [[event handler] event-map*]
@@ -86,7 +92,4 @@
 
      (connect! socket)
 
-     socket>))
-
-  ([url] (make-socket url {} {}))
-  ([url event-map] (make-socket url event-map {})))
+     socket>)))

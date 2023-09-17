@@ -4,17 +4,16 @@
    [taoensso.timbre :as log]
    [camel-snake-kebab.core :as csk]
    [clojure.core.async :as async :refer [<! >! go go-loop chan close! alts! timeout]]
+   [ligretto-bot-clj.constants :refer [socket-url]]
    [ligretto-bot-clj.utils :as utils]
    [ligretto-bot-clj.bot.socket-io-client :as sic]
    [ligretto-bot-clj.bot.api :as api]
    [ligretto-bot-clj.bot.strategies :as strat]
    [ligretto-bot-clj.bot.actions :as actions :refer [emit-action! ->action]]))
 
-(def socket-url "https://api.ligretto.app/")
-
-(def ^:const start-game-timeout 64000)
-(def ^:const update-game-timeout 180000)
-(def ^:const connect-timeout 10000)
+(def ^:const start-game-timeout 120000) ;; 2 minutes
+(def ^:const update-game-timeout 180000) ;; 3 minutes
+(def ^:const connect-timeout 15000) ;; 15 seconds
 
 (def event-types
   {:connect-to-room-success "@@rooms/SERVER/CONNECT_TO_ROOM_SUCCESS"
@@ -152,8 +151,8 @@
            ctx     {:bot-id       bot-id
                     :game-state   (atom {})
                     :user         user
-                    :turn-timeout (:turn-timeout options)
-                    :strategy     (:strategy options)
+                    :turn-timeout (or (:turn-timeout options) 1000)
+                    :strategy     (or (:strategy options) :easy)
                     :room-id      room-id
                     :socket       socket
                     :stoped?      (promise)
