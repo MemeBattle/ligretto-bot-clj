@@ -48,6 +48,12 @@
 
 (defn create
   [{:keys [game-id strategy turn-timeout]} {:keys [db]}]
+  (when (nil? game-id)
+    (throw (ex-info "Game id is required" {:game-id game-id})))
+  (when (or (nil? strategy) (not (keyword? strategy)))
+    (throw (ex-info "Strategy should be easy or random or default" {:strategy strategy})))
+  (when (or (nil? turn-timeout) (not (integer? turn-timeout)))
+    (throw (ex-info "Turn timeout should be number" {:turn-timeout turn-timeout})))
   (let [game-id* (keyword game-id)
         game (get @db game-id*)
         turn-timeout (or turn-timeout 1000)
@@ -61,13 +67,23 @@
       (->bot bot))))
 
 (defn remove-bot
-  [game-id bot-id {:keys [db]}]
-  (let [game-id* (keyword game-id)
-        bot-id* (keyword bot-id)
-        bot (get-in @db [game-id* bot-id*])]
-    (stop-bot bot)
-    (swap! db update-in [game-id] dissoc bot-id*)
-    (->bot bot)))
+  ([bot-id ctx]
+   (let  [{:keys [db]} ctx
+          bot-id* (keyword bot-id)
+          game-id* (->> @db
+                        (filter (fn [[_ bots]]
+                                  (some? (get bots bot-id*))))
+                        (keys)
+                        (first))]
+    (remove-bot game-id* bot-id ctx)))
+  ([game-id bot-id {:keys [db]}]
+   (let [game-id* (keyword game-id)
+         bot-id* (keyword bot-id)
+         bot (get-in @db [game-id* bot-id*])]
+     (when (not (nil? bot))
+       (stop-bot bot)
+       (swap! db update-in [game-id] dissoc bot-id*)
+       (->bot bot)))))
 
 (defn remove-game
   [game-id {:keys [db]}]

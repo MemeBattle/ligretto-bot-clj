@@ -72,7 +72,8 @@
 (defn stop-bot
   [ctx]
   (let [{:keys [socket stoped? events>]} ctx]
-    (sic/disconnect! socket)
+    (when (not (nil? socket))
+     (sic/disconnect! socket))
     (deliver stoped? true)
     (close! events>)
     (log/infof "[%s] Bot stopped" (:bot-id ctx))))

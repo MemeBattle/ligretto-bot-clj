@@ -20,14 +20,15 @@
                    [:span error]]]))))
 
 (defn BotCard
-  [{:keys [id strategy turn-timeout]}]
+  [game-id {:keys [id strategy turn-timeout]}]
     [:div.flex.flex-col.bg-base-200.rounded-lg.shadow-lg.p-4
      [:p [:b "ID: "] id]
      [:p [:b "Strategy: "] (name strategy)]
      [:p [:b "Timeout: "] turn-timeout]
      [:button.btn.btn-outline.btn-error.mt-2
-      {:hx-delete (str "/bots/" id)
+      {:hx-delete (str "/bots/" game-id "/" id)
        :hx-indicator "#indicator"
+       :hx-target "#bots-list"
        :hx-confirm "Are you sure you want to delete this bot?"}
       "Delete"]])
 
@@ -44,7 +45,7 @@
             [:h3.text-xl.font-bold.mb-4 (str "Game " game-id)]
             [:div.grid.grid-cols-3.gap-4
              (for [bot bots]
-               (BotCard bot))]])))]))
+               (BotCard game-id bot))]])))]))
 
 (def Header
   [:header.navbar.bg-base-200

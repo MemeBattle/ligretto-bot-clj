@@ -5,13 +5,14 @@
 
             [ligretto-bot-clj.web.services.bot :as bot-service]
             [ligretto-bot-clj.web.controllers.health :refer [healthcheck!]]
-            [ligretto-bot-clj.web.controllers.bot :refer [create home all-bots]]
+            [ligretto-bot-clj.web.controllers.bot :refer [create home all-bots delete]]
             [ligretto-bot-clj.web.middleware :refer [wrap-api wrap-page]]))
 
 (defroutes router
   (wrap-page (GET "/" req (home req)))
   (GET "/list" req (all-bots req))
   (POST "/create" req (create req))
+  (DELETE "/bots/:game-id/:bot-id" req (delete req))
 
   (wrap-api (GET "/health" [] healthcheck!))
 

@@ -15,3 +15,10 @@
   [pred coll]
   {:pre [fn? pred]}
   (first (filter pred coll)))
+
+(defn parse-int-safe
+  [^String s]
+  (try
+    (Integer/parseInt s)
+    (catch Exception _
+      nil)))
