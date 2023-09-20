@@ -54,6 +54,7 @@
     (throw (ex-info "Strategy should be easy or random or default" {:strategy strategy})))
   (when (or (nil? turn-timeout) (not (integer? turn-timeout)))
     (throw (ex-info "Turn timeout should be number" {:turn-timeout turn-timeout})))
+
   (let [game-id* (keyword game-id)
         game (get @db game-id*)
         turn-timeout (or turn-timeout 1000)
@@ -76,6 +77,7 @@
                         (keys)
                         (first))]
     (remove-bot game-id* bot-id ctx)))
+
   ([game-id bot-id {:keys [db]}]
    (let [game-id* (keyword game-id)
          bot-id* (keyword bot-id)
