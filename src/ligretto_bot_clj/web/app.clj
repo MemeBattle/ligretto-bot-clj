@@ -31,6 +31,7 @@
 ;; { game-id { bot-id { bot } } }
 (defmethod ig/init-key :web/db
   [_ {:keys [init-value] :or {init-value {}}}]
+  ;; todo: make protocol for dao and use it here
   (let [db (atom init-value)]
     (run-clear-db-worker db)
     db))
@@ -45,9 +46,6 @@
           (log/error (ex-message e))))))
   (reset! db {}))
 
-(def ^:dynamic *ctx* nil)
-
 (defmethod ig/init-key :web/app
   [_ {:keys [db]}]
-  (binding [*ctx* {:db db}]
-    (wrap-base router *ctx*)))
+  (wrap-base router {:db db}))

@@ -168,6 +168,7 @@
 
 (defmethod make-turn :easy
   [ctx]
+  ;; todo: move out from make-turns
   (go
     (<! (turn-timeout ctx))
     (easy-turn-action ctx)))
