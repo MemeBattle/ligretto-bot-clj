@@ -32,17 +32,16 @@
 
 (comment
   (log/set-min-level! :error)
-  (log/with-min-level :info
+  (log/with-min-level :error
     (start-app :config {:profile :dev}))
 
   (require '[portal.api :as p])
   (add-tap #'p/submit)
   (p/start {:port 3000})
+  (p/open {:launcher :vs-code})
   (tap> "test")
 
-  (tap> @system)
-  @system)
-
+  (tap> @system))
 (defn shutdown-hook []
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. ^Runnable

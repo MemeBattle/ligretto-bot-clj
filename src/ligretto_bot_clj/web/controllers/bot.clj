@@ -28,7 +28,6 @@
 
 (defn delete
   [{:keys [params ctx]}]
-  (tap> params)
   (let [game-id (:game-id params)
         bot-id (:bot-id params)]
    (try

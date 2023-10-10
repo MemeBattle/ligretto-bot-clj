@@ -24,14 +24,15 @@
    :end-round "@@gameplay/SERVER/END_ROUND"
    :user-join-to-room "@@game/SERVER/USER_JOIN_TO_ROOM"})
 
-(defn handle-event ([port]
-                    (fn [event]
-                      (let [event* (-> event
-                                       (.toString)
-                                       (json/parse-string csk/->kebab-case-keyword))]
-                        (go
-                          (log/debugf "event: %s" event*)
-                          (>! port event*))))))
+(defn handle-event
+  [port]
+  (fn [event]
+    (let [event* (-> event
+                     (.toString)
+                     (json/parse-string csk/->kebab-case-keyword))]
+      (go
+        (log/debugf "event: %s" event*)
+        (>! port event*)))))
 
 (defn extract-game
   [message]
@@ -71,10 +72,10 @@
 
 (defn stop-bot
   [ctx]
-  (let [{:keys [socket stoped? events>]} ctx]
+  (let [{:keys [socket status events>]} ctx]
     (when (not (nil? socket))
      (sic/disconnect! socket))
-    (deliver stoped? true)
+    (reset! status :shutdown)
     (close! events>)
     (log/infof "[%s] Bot stopped" (:bot-id ctx))))
 
@@ -111,7 +112,7 @@
         (when turn
           (emit-action! (:socket ctx) turn))
         (log/debug (format "[%s] Turn: %s" bot-id turn)))
-      (when (not (realized? (:stoped? ctx)))
+      (when (not (= @(:status ctx) :shutdown))
         (recur)))))
 
 (defn process-game
@@ -134,6 +135,7 @@
 
         (log/infof "[%s] Game started: %s" bot-id room-id)
         (reset! game-state (:payloed stated-game-event))
+        (reset! (:status ctx) :in-game)
 
         (handle-updates ctx)
         (game-loop ctx)))))
@@ -156,7 +158,7 @@
                     :strategy     (or (:strategy options) :easy)
                     :room-id      room-id
                     :socket       socket
-                    :stoped?      (promise)
+                    :status       (atom :new)
                     :events>      events>}]
 
        (let [timeout> (timeout connect-timeout)
@@ -168,6 +170,7 @@
            (condp = ch
              sucess>  (do
                         (log/infof "[%s] Connected to room %s" bot-id room-id)
+                        (reset! (:status ctx) :connected)
                         (reset! (:game-state ctx) (extract-game connected-data))
                         (process-game ctx))
              timeout> (do

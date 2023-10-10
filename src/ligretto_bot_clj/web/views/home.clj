@@ -3,6 +3,18 @@
    [ligretto-bot-clj.web.views.layout :refer [Layout]]
    [ligretto-bot-clj.web.services.bot :as bot-service]))
 
+(def status-colors
+  {:new "bg-gray-500"
+   :connected "bg-green-500"
+   :in-game "bg-blue-500"
+   :shutdown "bg-red-500"})
+
+(def status-texts
+  {:new "New"
+   :connected "Connected"
+   :in-game "InGame"
+   :shutdown "Shutting down"})
+
 (def ErrorIcon
   [:svg {:xmlns "http://www.w3.org/2000/svg", :class "stroke-current shrink-0 h-6 w-6", :fill "none", :viewbox "0 0 24 24"}
    [:path {:stroke-linecap "round", :stroke-linejoin "round", :stroke-width "2", :d "M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"}]])
@@ -20,17 +32,23 @@
                    [:span error]]]))))
 
 (defn BotCard
-  [game-id {:keys [id strategy turn-timeout]}]
-    [:div.flex.flex-col.bg-base-200.rounded-lg.shadow-lg.p-4
-     [:p [:b "ID: "] id]
-     [:p [:b "Strategy: "] (name strategy)]
-     [:p [:b "Timeout: "] turn-timeout]
-     [:button.btn.btn-outline.btn-error.mt-2
-      {:hx-delete (str "/bots/" game-id "/" id)
-       :hx-indicator "#indicator"
-       :hx-target "#bots-list"
-       :hx-confirm "Are you sure you want to delete this bot?"}
-      "Delete"]])
+  [game-id {:keys [id strategy turn-timeout status]}]
+    (let [status (or status :new)
+          status-color (get status-colors status)
+          status-text (get status-texts status)]
+     [:div.flex.flex-col.bg-base-200.rounded-lg.shadow-lg.p-4
+      [:p [:b "ID: "] id]
+      [:p [:b "Strategy: "] (name strategy)]
+      [:p [:b "Timeout: "] turn-timeout]
+      [:p [:b "Status: "]
+       [:span {:class (str "badge " status-color)}
+        status-text]]
+      [:button.btn.btn-outline.btn-error.mt-2
+       {:hx-delete (str "/bots/" game-id "/" id)
+        :hx-indicator "#indicator"
+        :hx-target "#bots-list"
+        :hx-confirm "Are you sure you want to delete this bot?"}
+       "Delete"]]))
 
 (defn BotList
   [ctx]
@@ -41,7 +59,7 @@
        (let [bots (get bots (:game-id game))
              game-id (some-> game :game-id name)]
          (when (not (nil? game-id))
-           [:div.flex.flex-col
+           [:div.flex.flex-col.pt-2
             [:h3.text-xl.font-bold.mb-4 (str "Game " game-id)]
             [:div.grid.grid-cols-3.gap-4
              (for [bot bots]

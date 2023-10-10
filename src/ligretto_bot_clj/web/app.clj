@@ -14,7 +14,7 @@
     (if (empty? game)
       (swap! db dissoc game-id)
       (doseq [bot (vals game)]
-        (when (realized? (:stoped? bot))
+        (when (= @(:status bot) :shutdown)
           (log/info "Removing bot" (:bot-id bot) "from game" game-id)
           (swap! db dissoc game-id (keyword (:bot-id bot))))))))
 

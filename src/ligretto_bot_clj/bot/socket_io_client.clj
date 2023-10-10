@@ -81,9 +81,10 @@
                              Socket/EVENT_CONNECT_ERROR
                              (fn [error]
                                (pprint/pprint error)
-                               (log/errorf "failed to connect to %s" url
-                                           (log/debug (.getMessage error) options)
-                                           (close! socket>)))})]
+                               (log/errorf "failed to connect to %s" url)
+                               (log/debug (.getMessage error) options)
+                               (disconnect! socket)
+                               (close! socket>))})]
      (.open socket)
 
      (doseq [[event handler] event-map*]

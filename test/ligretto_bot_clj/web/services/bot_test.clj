@@ -10,6 +10,6 @@
            "f11b95f6-fe13-49e5-b9d3-7c2f42b571b4")))
 
   (testing "remove-bot-by-id"
-    (let [db (atom {:123 {:321 {:stoped? (promise) :events> (chan)}}})]
+    (let [db (atom {:123 {:321 {:status (atom :new) :events> (chan)}}})]
       (sut/remove-bot "321" {:db db})
       (is (= @db {:123 {}})))))

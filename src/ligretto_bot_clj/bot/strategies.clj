@@ -3,11 +3,12 @@
             [ligretto-bot-clj.utils :as utils :refer [find-index find-first]]
             [clojure.core.async :as async :refer [<! go timeout]]))
 
-(defn put-card ([ctx from-index to-index]
-                (let [game-id (:room-id ctx)]
-                  (->action :put-card {:game-id               game-id
-                                       :playground-deck-index to-index
-                                       :card-index            from-index})))
+(defn put-card
+  ([ctx from-index to-index]
+   (let [game-id (:room-id ctx)]
+     (->action :put-card {:game-id               game-id
+                          :playground-deck-index to-index
+                          :card-index            from-index})))
   ([ctx from-index]
    (let [game-id (:room-id ctx)]
      (->action :put-card {:game-id               game-id
@@ -55,7 +56,7 @@
   "Returns index on playground to put card"
   [card playground]
   (let [{:keys [color value]} card]
-    (if (= 1 value)
+    (if (= value 1)
       (count playground)
       (find-index #(and (= (:color %) color)
                         (= (:value %) (dec value)))
@@ -77,7 +78,8 @@
 (defmulti random-action
   (fn [_]
     (let [random-sample (rand-nth random-actions)]
-      random-sample)))
+      random-sample))
+  :default identity)
 
 (defmethod random-action :put-card-from-stack
   [ctx]
@@ -93,11 +95,12 @@
 (defmethod random-action :put-card-from-liretto
   [ctx]
   (let [{:keys [ligretto playground]} (extract-decks ctx)
-        playable-cards-indexed (keep-indexed
-                                (fn [i card]
-                                  (when (can-put-card? card playground)
-                                    [card i]))
-                                ligretto)
+        playable-cards-indexed
+        (keep-indexed
+         (fn [i card]
+           (when (can-put-card? card playground)
+             [card i]))
+         ligretto)
         [random-card random-card-index] (rand-nth playable-cards-indexed)]
     (when random-card
       (let [index (find-place-to-put random-card playground)]
@@ -106,10 +109,6 @@
 (defmethod random-action :take-card-from-ligretto-deck
   [ctx]
   (take-card-from-ligretto-deck ctx))
-
-(defmethod random-action :default
-  [ctx]
-  ctx)
 
 (defmethod make-turn :random
   [ctx]
@@ -122,7 +121,7 @@
   (let [{:keys [stack playground]} (extract-decks ctx)
         open-card (last stack)]
     (if (can-put-card? open-card playground)
-      (if (= 1 (:value open-card))
+      (if (= (:value open-card) 1)
         (put-card-from-stack ctx)
         (put-card-from-stack ctx (find-place-to-put open-card playground)))
       (take-card-from-stack ctx))))
@@ -146,11 +145,12 @@
 (defn put-card-from-liretto
   [ctx]
   (let [{:keys [ligretto playground]} (extract-decks ctx)
-        playable-cards-indexed (keep-indexed
-                                (fn [i card]
-                                  (when (can-put-card? card playground)
-                                    [card i]))
-                                ligretto)
+        playable-cards-indexed
+        (keep-indexed
+         (fn [i card]
+           (when (can-put-card? card playground)
+             [card i]))
+         ligretto)
         ;; we want to put card with the highest value
         [random-card random-card-index] (last (sort-by :value playable-cards-indexed))]
     (when random-card

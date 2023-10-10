@@ -6,34 +6,39 @@
 
 (defn extract-game-id
   [url]
-  (if (str/starts-with? url game-url)
-   (let [room-id (str/replace url (str game-url "/") "")]
-     (if (str/blank? room-id)
-       (throw (ex-info "Invalid room url" {:url url}))
-       room-id))
-    (throw (ex-info "Invalid room url" {:url url}))))
+  (when (not (str/starts-with? url game-url))
+    (throw (ex-info "Invalid room url" {:url url})))
+  (let [room-id (str/replace url (str game-url "/") "")]
+    (when (str/blank? room-id)
+      (throw (ex-info "Invalid room url" {:url url})))
+    room-id))
 
 (defn ->bot
   [bot]
-  (let [{:keys [bot-id strategy turn-timeout user]} bot]
+  (let [{:keys [bot-id strategy turn-timeout user status]} bot]
     {:id bot-id
      :strategy strategy
      :turn-timeout turn-timeout
-     :user user}))
+     :user user
+     :status @status}))
 
 (defn ->games
   [db]
   (let [entries (seq db)]
-    (map (fn [[game-id bots]]
-           (let [[_ bot] (first bots)]
-             (when-let [game-state (:game-state bot)]
-               {:game-id game-id :game-state @game-state}))) entries)))
+    (map
+     (fn [[game-id bots]]
+       (let [[_ bot] (first bots)]
+         (when-let [game-state (:game-state bot)]
+           {:game-id game-id :game-state @game-state})))
+     entries)))
 
 (defn ->bots
   [db]
-  (into {} (map (fn [[game-id bots]]
-                  [game-id (map ->bot (vals bots))])
-                db)))
+  (into {}
+        (map
+    (fn [[game-id bots]]
+      [game-id (map ->bot (vals bots))])
+    db)))
 
 (defn get-all
   "Response structure:
@@ -71,12 +76,13 @@
   ([bot-id ctx]
    (let  [{:keys [db]} ctx
           bot-id* (keyword bot-id)
-          game-id* (->> @db
-                        (filter (fn [[_ bots]]
-                                  (some? (get bots bot-id*))))
-                        (keys)
-                        (first))]
-    (remove-bot game-id* bot-id ctx)))
+          game-id*
+          (->> @db
+               (filter (fn [[_ bots]]
+                         (some? (get bots bot-id*))))
+               (keys)
+               (first))]
+     (remove-bot game-id* bot-id ctx)))
 
   ([game-id bot-id {:keys [db]}]
    (let [game-id* (keyword game-id)
