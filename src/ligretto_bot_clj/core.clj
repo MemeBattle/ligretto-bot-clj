@@ -42,6 +42,7 @@
   (tap> "test")
 
   (tap> @system))
+
 (defn shutdown-hook []
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. ^Runnable

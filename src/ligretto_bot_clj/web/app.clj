@@ -11,12 +11,12 @@
   [db]
   (log/info "Clearing DB")
   (doseq [[game-id game] @db]
-    (if (empty? game)
-      (swap! db dissoc game-id)
-      (doseq [bot (vals game)]
-        (when (= @(:status bot) :shutdown)
-          (log/info "Removing bot" (:bot-id bot) "from game" game-id)
-          (swap! db dissoc game-id (keyword (:bot-id bot))))))))
+    (doseq [bot (vals game)]
+      (when (= @(:status bot) :shutdown)
+        (log/info "Removing bot" (:bot-id bot) "from game" game-id)
+        (swap! db dissoc game-id (keyword (:bot-id bot)))))
+    (when (empty? game)
+      (swap! db dissoc game-id))))
 
 (defn run-clear-db-worker
   "Runs worker to clear stopped bots from DB

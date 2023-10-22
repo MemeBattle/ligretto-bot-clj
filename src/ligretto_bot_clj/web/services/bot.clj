@@ -90,7 +90,7 @@
          bot (get-in @db [game-id* bot-id*])]
      (when (not (nil? bot))
        (stop-bot bot)
-       (swap! db update-in [game-id] dissoc bot-id*)
+       (swap! db update-in [game-id*] dissoc bot-id*)
        (->bot bot)))))
 
 (defn remove-game
