@@ -85,7 +85,6 @@
     (let [update-timeout> (timeout update-game-timeout)
           [event ch] (alts! [(:events> ctx)
                              update-timeout>])]
-      (tap> {:event event :message "handle-updates"})
       (if (= ch update-timeout>)
         (do
           (log/errorf "[%s] Update game timeout" (:bot-id ctx))
@@ -114,7 +113,6 @@
     (go-loop []
       (<! (turn-timeout ctx))
       (let [turn (strat/make-turn ctx)]
-        (tap> {:turn turn :message "game-loop!!!"})
         (when turn
           (emit-action! (:socket ctx) turn))
         (log/debug (format "[%s] Turn: %s" bot-id turn)))
@@ -140,7 +138,6 @@
           (throw (ex-info "Game start timeout" {:room-id room-id :bot-id bot-id})))
 
         (log/infof "[%s] Game started: %s" bot-id room-id)
-        (tap> {:message "game-started" :data stated-game-event :ctx ctx})
         (reset! game-state (:payload stated-game-event))
         (reset! (:status ctx) :in-game)
 
@@ -179,7 +176,6 @@
                         (log/infof "[%s] Connected to room %s" bot-id room-id)
                         (reset! (:status ctx) :connected)
                         (reset! (:game-state ctx) (extract-game connected-data))
-                        (tap> {:message "connected" :data connected-data :ctx ctx})
                         (process-game ctx))
              timeout> (do
                         (log/errorf "[%s] Failed to connect to room %s" bot-id room-id)

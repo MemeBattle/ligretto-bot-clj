@@ -57,10 +57,11 @@
      {:id "bots-list"}
      (for [game games]
        (let [bots (get bots (:game-id game))
-             game-id (some-> game :game-id name)]
+             game-id (some-> game :game-id name)
+             game-name (some-> game :game-state :name)]
          (when (not (nil? game-id))
            [:div.flex.flex-col.pt-2
-            [:h3.text-xl.font-bold.mb-4 (str "Game " game-id)]
+            [:h3.text-xl.font-bold.mb-4 (str "Game " game-name " (" game-id ")")]
             [:div.grid.grid-cols-3.gap-4
              (for [bot bots]
                (BotCard game-id bot))]])))]))
