@@ -85,6 +85,7 @@
     (let [update-timeout> (timeout update-game-timeout)
           [event ch] (alts! [(:events> ctx)
                              update-timeout>])]
+      (tap> {:event event :message "handle-updates"})
       (if (= ch update-timeout>)
         (do
           (log/errorf "[%s] Update game timeout" (:bot-id ctx))
@@ -103,12 +104,17 @@
 
           (log/errorf "[%s] Unknown event: %s" (:bot-id ctx) event))))))
 
+(defn turn-timeout
+  [ctx]
+  (timeout (:turn-timeout ctx)))
+
 (defn game-loop
   [ctx]
   (let [{:keys [bot-id]} ctx]
     (go-loop []
-      ;; TODO: handle paused game
-      (let [turn (<! (strat/make-turn ctx))]
+      (<! (turn-timeout ctx))
+      (let [turn (strat/make-turn ctx)]
+        (tap> {:turn turn :message "game-loop!!!"})
         (when turn
           (emit-action! (:socket ctx) turn))
         (log/debug (format "[%s] Turn: %s" bot-id turn)))
@@ -118,7 +124,7 @@
 (defn process-game
   [ctx]
   (let [{:keys [bot-id room-id game-state events>]} ctx]
-    ;; TODO: support wait for game end as a spectrator
+    ;; TODO: support wait for game end as a spectrator, pasued game
     (when (not (game-status= :new ctx))
       (log/errorf "[%s] Game already started" bot-id)
       (stop-bot ctx)
@@ -134,7 +140,8 @@
           (throw (ex-info "Game start timeout" {:room-id room-id :bot-id bot-id})))
 
         (log/infof "[%s] Game started: %s" bot-id room-id)
-        (reset! game-state (:payloed stated-game-event))
+        (tap> {:message "game-started" :data stated-game-event :ctx ctx})
+        (reset! game-state (:payload stated-game-event))
         (reset! (:status ctx) :in-game)
 
         (handle-updates ctx)
@@ -172,6 +179,7 @@
                         (log/infof "[%s] Connected to room %s" bot-id room-id)
                         (reset! (:status ctx) :connected)
                         (reset! (:game-state ctx) (extract-game connected-data))
+                        (tap> {:message "connected" :data connected-data :ctx ctx})
                         (process-game ctx))
              timeout> (do
                         (log/errorf "[%s] Failed to connect to room %s" bot-id room-id)

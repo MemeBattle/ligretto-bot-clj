@@ -1,7 +1,6 @@
 (ns ligretto-bot-clj.bot.strategies
   (:require [ligretto-bot-clj.bot.actions :as actions :refer [->action]]
-            [ligretto-bot-clj.utils :as utils :refer [find-index find-first]]
-            [clojure.core.async :as async :refer [<! go timeout]]))
+            [ligretto-bot-clj.utils :as utils :refer [find-index find-first]]))
 
 (defn put-card
   ([ctx from-index to-index]
@@ -40,16 +39,18 @@
 
     {:ligretto (:cards player)
      :stack (get-in player [:stack-open-deck :cards])
-     :playground (->> (get-in game [:playground :decks])
-                      (map #(last (:cards %))))}))
+     :playground (some->> (get-in game [:playground :decks])
+                      (mapv #(some-> % :cards last)))}))
 
 (defn can-put-card?
   [card playground]
   (let [{:keys [color value]} card]
-    (if (= value 1)
-      true
-      (some #(and (= (:color %) color)
-                  (= (:value %) (dec value)))
+    (if
+      (= value 1) true
+      (some #(and
+              (not (nil? (:value %)))
+              (= (:color %) color)
+              (= (:value %) (dec value)))
             playground))))
 
 (defn find-place-to-put
@@ -57,14 +58,10 @@
   [card playground]
   (let [{:keys [color value]} card]
     (if (= value 1)
-      (count playground)
+      (find-index #(nil? %) playground)
       (find-index #(and (= (:color %) color)
                         (= (:value %) (dec value)))
                   playground))))
-
-(defn turn-timeout
-  [ctx]
-  (timeout (:turn-timeout ctx)))
 
 (defmulti make-turn
   :strategy)
@@ -92,7 +89,11 @@
   [ctx]
   (take-card-from-stack ctx))
 
-(defmethod random-action :put-card-from-liretto
+(defmethod random-action :take-card-from-ligretto-deck
+  [ctx]
+  (take-card-from-ligretto-deck ctx))
+
+(defmethod make-turn :random
   [ctx]
   (let [{:keys [ligretto playground]} (extract-decks ctx)
         playable-cards-indexed
@@ -106,17 +107,7 @@
       (let [index (find-place-to-put random-card playground)]
         (put-card ctx random-card-index index)))))
 
-(defmethod random-action :take-card-from-ligretto-deck
-  [ctx]
-  (take-card-from-ligretto-deck ctx))
-
-(defmethod make-turn :random
-  [ctx]
-  (go
-    (<! (turn-timeout ctx))
-    (random-action ctx)))
-
-(defn default-turn-action
+(defmethod make-turn :default
   [ctx]
   (let [{:keys [stack playground]} (extract-decks ctx)
         open-card (last stack)]
@@ -125,12 +116,6 @@
         (put-card-from-stack ctx)
         (put-card-from-stack ctx (find-place-to-put open-card playground)))
       (take-card-from-stack ctx))))
-
-(defmethod make-turn :default
-  [ctx]
-  (go
-    (<! (turn-timeout ctx))
-    (default-turn-action ctx)))
 
 (defn need-take-from-ligretto-deck?
   "We need to take cards from ligretto deck if we have not enought cards in the ligretto row.
@@ -142,6 +127,11 @@
   [ligretto playground]
   (some #(can-put-card? % playground) ligretto))
 
+(defn can-put-card-from-stack?
+  [stack playground]
+  (let [open-card (last stack)]
+    (and (not (nil? open-card)) (can-put-card? open-card playground))))
+
 (defn put-card-from-liretto
   [ctx]
   (let [{:keys [ligretto playground]} (extract-decks ctx)
@@ -152,23 +142,17 @@
              [card i]))
          ligretto)
         ;; we want to put card with the highest value
-        [random-card random-card-index] (last (sort-by :value playable-cards-indexed))]
-    (when random-card
-      (let [index (find-place-to-put random-card playground)]
-        (put-card ctx random-card-index index)))))
-
-(defn easy-turn-action
-  [ctx]
-  (let [{:keys [stack playground ligretto]} (extract-decks ctx)]
-    (cond
-      (need-take-from-ligretto-deck? ligretto) (take-card-from-ligretto-deck ctx)
-      (can-put-card-from-ligretto? ligretto playground) (put-card-from-liretto ctx)
-      (can-put-card? (last stack) playground) (put-card-from-stack ctx)
-      :else (take-card-from-stack ctx))))
+        [card card-index] (last (sort-by :value playable-cards-indexed))]
+    (when card
+      (let [index (find-place-to-put card playground)]
+        (put-card ctx card-index index)))))
 
 (defmethod make-turn :easy
   [ctx]
-  ;; todo: move out from make-turns
-  (go
-    (<! (turn-timeout ctx))
-    (easy-turn-action ctx)))
+
+  (let [{:keys [stack playground ligretto]} (extract-decks ctx)]
+     (cond
+       (need-take-from-ligretto-deck? ligretto) (take-card-from-ligretto-deck ctx)
+       (can-put-card-from-ligretto? ligretto playground) (put-card-from-liretto ctx)
+       (can-put-card-from-stack? stack playground) (put-card-from-stack ctx)
+       :else (take-card-from-stack ctx))))

@@ -36,9 +36,9 @@
   [db]
   (into {}
         (map
-    (fn [[game-id bots]]
-      [game-id (map ->bot (vals bots))])
-    db)))
+         (fn [[game-id bots]]
+           [game-id (map ->bot (vals bots))])
+         db)))
 
 (defn get-all
   "Response structure:
@@ -48,8 +48,8 @@
   (let [db @db
         bots (->bots db)
         games (->games db)]
-   {:bots bots
-    :games games}))
+    {:bots bots
+     :games games}))
 
 (defn create
   [{:keys [game-id strategy turn-timeout]} {:keys [db]}]

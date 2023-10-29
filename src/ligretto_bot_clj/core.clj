@@ -39,15 +39,12 @@
   (add-tap #'p/submit)
   (p/start {:port 3000})
   (p/open {:launcher :vs-code})
-  (tap> "test")
-
   (tap> @system))
 
 (defn shutdown-hook []
   (.addShutdownHook (Runtime/getRuntime)
                     (Thread. ^Runnable
-                     (fn []
-                       (println "Shutting Down!")
+                     #((println "Shutting Down!")
                        (stop-app)
                        (shutdown-agents)))))
 
